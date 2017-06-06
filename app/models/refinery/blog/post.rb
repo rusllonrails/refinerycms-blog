@@ -103,7 +103,7 @@ module Refinery
       end
 
       def author_name
-        author.present? ? author.name : "Enterprise Nation"
+        author.present? ? "#{author.first_name} #{author.last_name}" : "Enterprise Nation"
       end
 
       def self.highlighted
