@@ -10,6 +10,9 @@ module Refinery
         before_filter :find_all_categories,
                       :only => [:new, :edit, :create, :update]
 
+
+        before_action :find_post, only: [:edit, :update, :destroy, :highlight]
+
         before_filter :check_category_ids, :only => :update
 
         def uncategorized
@@ -31,8 +34,17 @@ module Refinery
           render :json => @tags.flatten
         end
 
+        def highlight
+          if @post.highlight
+            respond_to do |format|
+              format.json { render json: @post }
+              format.html { redirect_to refinery.blog_admin_posts_path }
+            end
+          end
+        end
+
         def new
-          @post = ::Refinery::Blog::Post.new(:author => current_refinery_user)
+          @post = ::Refinery::Blog::Post.new(author: current_refinery_user, marketplace_ids: current_marketplace_or_default.id)
         end
 
         def create
@@ -87,7 +99,7 @@ module Refinery
         def post_params
           params.require(:post).permit(permitted_post_params)
         end
-        
+
         def permitted_post_params
           [
             :title, :body, :custom_teaser, :tag_list,

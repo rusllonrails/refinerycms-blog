@@ -29,10 +29,28 @@ module Refinery
                                       :allow_blank => true,
                                       :verify => [:resolve_redirects]}
 
+      attr_accessible :feature_image_id,
+                      :like_attributes,
+                      :allow_comments,
+                      :marketplace_ids
+
+      belongs_to :feature_image, class_name: 'Refinery::Image'
+      has_one :like, as: :likeable, class_name: 'Refinery::Likes::Like'
+      has_and_belongs_to_many :marketplaces, class_name: 'Refinery::Marketplaces::Marketplace',
+                                             join_table: "marketplaces_posts"
+
+      accepts_nested_attributes_for :like, allow_destroy: true, reject_if: :all_blank
+      delegate :name, to: :author, prefix: true, allow_nil: true
+
+      scope :with_marketplace, -> (marketplace_id) {
+        joins(:marketplaces).
+        where({refinery_marketplaces: { id: marketplace_id}})
+      }
+
       class Translation
         is_seo_meta
       end
-      
+
       # Override this to disable required authors
       def author_required?
         true
@@ -64,6 +82,32 @@ module Refinery
 
       def friendly_id_source
         custom_url.presence || title
+      end
+
+      def related
+        posts = []
+
+        if category = self.categories.first
+          posts = category.posts
+                          .live
+                          .includes(:comments, :categories)
+                          .with_globalize
+                          .limit(3)
+        end
+
+        posts
+      end
+
+      def highlight
+        self.update_attribute(:highlighted_at, Time.current)
+      end
+
+      def author_name
+        author.present? ? author.name : "Enterprise Nation"
+      end
+
+      def self.highlighted
+        where('highlighted_at IS NOT NULL').order(highlighted_at: :desc)
       end
 
       class << self

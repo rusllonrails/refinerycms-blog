@@ -2,25 +2,45 @@ module Refinery
   module Blog
     class PostsController < BlogController
 
-      before_filter :find_all_blog_posts, :except => [:archive]
-      before_filter :find_blog_post, :only => [:show, :comment, :update_nav]
-      before_filter :find_tags
+      include ::SubdomainHelper
 
-      respond_to :html, :js, :rss
+      respond_to :html, :js, :rss, :json
+
+      before_action :redirect_to_root_domain_if_marketplace
+      before_action :find_blog_post, :only => [:show, :comment, :update_nav, :vote]
+      before_filter :find_tags
+      before_action :find_related_posts, :only => [:show]
+      before_action :set_voter, :only => [:vote]
+      before_action :add_default_breadcrumbs
+      before_action :add_breadcrumbs, :only => [:show]
+      before_action :set_voting_key, :only => [:show, :vote]
+      before_action :set_og_meta, :only => [:show]
+      before_action :set_form_loaded_at, :only => [:show]
+      before_action :flood_prevention, :only => [:comment]
+      before_action :find_all_blog_posts, :except => [:archive]
 
       def index
-        if request.format.rss?
-          @posts = if params["max_results"].present?
-            # limit rss feed for services (like feedburner) who have max size
-            Post.recent(params["max_results"])
-          else
-            Post.newest_first.live.includes(:comments, :categories)
+        if stale?(etag: @posts.first, last_modified: @posts.maximum(:updated_at))
+          respond_with (@posts) do |format|
+            format.html
+            format.rss { render :layout => false }
           end
         end
-        respond_with (@posts) do |format|
-          format.html
-          format.rss { render :layout => false }
+      end
+
+      def vote
+        if user_can_vote?
+          @voter.vote_for(@post)
+          cookies[self.voting_key] = @post.id
         end
+        respond_to do |format|
+          format.html { redirect_to refinery.blog_post_url(@post) }
+          format.json { render :json => {:for_count => @post.votes_for, :against_count => @post.votes_against } }
+        end
+      end
+
+      def voting_key
+        "blog_#{@post.id}"
       end
 
       def show
@@ -88,9 +108,72 @@ module Refinery
       end
 
     protected
+
       def canonical?
         Refinery::I18n.default_frontend_locale != Refinery::I18n.current_frontend_locale
+      end
+
+      def set_form_loaded_at
+        session[:form_loaded_at] = Time.now.to_i
+      end
+
+      def flood_prevention
+        time_elapsed = Time.now.to_i - session[:form_loaded_at].to_i
+        redirect_to refinery.blog_post_url(@post) if time_elapsed < 5
+      end
+
+      def add_default_breadcrumbs
+        add_crumb 'Home', '/'
+        add_crumb 'Blog', '/blog'
+      end
+
+      def set_voter
+        @voter = current_website_user ? current_website_user : Refinery::Websites::User.first
+      end
+
+      def find_related_posts
+        @related = @post.related
+      end
+
+      def add_breadcrumbs
+        add_crumb @post.title, view_context.refinery.blog_post_path(@post)
+      end
+
+      def user_can_vote?
+        !cookies[self.voting_key]
+      end
+
+      def set_voting_key
+        @voting_key = self.voting_key
+      end
+
+      def set_og_meta
+        @page.open_graph_title = @post.title
+        @page.open_graph_description = @post.body
+        @page.open_graph_image = @post.feature_image.url if @post.feature_image
+      end
+
+      def find_all_blog_posts
+        @posts = Refinery::Blog::Post.live
+                                     .includes(:comments, :categories)
+                                     .with_marketplace(current_marketplace_or_default.id)
+                                     .where("published_at IS NOT NULL")
+                                     .order(published_at: :desc)
+                                     .with_globalize
+                                     .page(params[:page])
+      end
+
+      def find_blog_post
+        unless (@post = Refinery::Blog::Post.with_globalize.find_by_slug(params[:id])).try(:live?)
+          if refinery_user? and current_refinery_user.authorized_plugins.include?("refinerycms_blog")
+            @post = Refinery::Blog::Post.with_globalize.find_by_slug(params[:id])
+          else
+            error_404
+          end
+        end
       end
     end
   end
 end
+
+

@@ -13,6 +13,13 @@ module Refinery
       validates :name, :message, presence: true
       validates :email, format: { with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i }
 
+      attr_accessor :bypass_humanizer
+
+      include Humanizer
+      require_human_on :create, unless: :bypass_humanizer
+
+      attr_accessible :humanizer_answer, :humanizer_question_id
+
       class << self
         def unmoderated
           where(state: nil)

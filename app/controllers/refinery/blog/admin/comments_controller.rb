@@ -8,14 +8,12 @@ module Refinery
                 :order => 'published_at DESC'
 
         def index
-          @comments = Refinery::Blog::Comment.unmoderated.page(params[:page])
-
+          @comments = Refinery::Blog::Comment.unmoderated.order('created_at DESC').page(params[:page])
           render :index
         end
 
         def approved
-          @comments = Refinery::Blog::Comment.approved.page(params[:page])
-
+          @comments = Refinery::Blog::Comment.approved.order('created_at DESC').page(params[:page])
           render :index
         end
 
@@ -28,8 +26,7 @@ module Refinery
         end
 
         def rejected
-          @comments = Refinery::Blog::Comment.rejected.page(params[:page])
-
+          @comments = Refinery::Blog::Comment.rejected.order('created_at DESC').page(params[:page])
           render :index
         end
 
@@ -40,7 +37,6 @@ module Refinery
 
           redirect_to refinery.blog_admin_comments_path
         end
-
       end
     end
   end

@@ -24,6 +24,12 @@ module Refinery
         posts.live.with_globalize.count
       end
 
+      def highlighted_post
+        post = posts.highlighted.first
+        post ||= posts.first
+        post
+      end
+
       # how many items to show per page
       self.per_page = Refinery::Blog.posts_per_page
 

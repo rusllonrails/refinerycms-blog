@@ -2,7 +2,11 @@ module Refinery
   module Blog
     class BlogController < ::ApplicationController
 
+      include ::SubdomainHelper
+
       helper :'refinery/blog/posts'
+
+      before_action :redirect_to_root_domain_if_marketplace
       before_action :find_page, :find_all_blog_categories
 
       protected
