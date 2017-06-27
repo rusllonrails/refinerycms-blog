@@ -6,8 +6,15 @@ module Refinery
 
       helper :'refinery/blog/posts'
 
+      before_action :reject_for_now
+
       before_action :redirect_to_root_domain_if_marketplace
       before_action :find_page, :find_all_blog_categories
+
+      def reject_for_now
+        render nothing: true
+        return false
+      end
 
       protected
 
