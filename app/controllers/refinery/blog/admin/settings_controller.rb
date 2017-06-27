@@ -3,6 +3,8 @@ module Refinery
     module Admin
       class SettingsController < ::Refinery::AdminController
 
+        include ::SubdomainHelper
+
         def notification_recipients
           @recipients = Refinery::Blog::Comment::Notification.recipients
 

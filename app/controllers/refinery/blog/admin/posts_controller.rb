@@ -3,6 +3,8 @@ module Refinery
     module Admin
       class PostsController < ::Refinery::AdminController
 
+        include ::SubdomainHelper
+
         crudify :'refinery/blog/post',
                 :order => 'published_at DESC',
                 :include => [:translations, :author]
@@ -104,7 +106,11 @@ module Refinery
           [
             :title, :body, :custom_teaser, :tag_list,
             :draft, :published_at, :custom_url, :user_id, :browser_title,
-            :meta_description, :source_url, :source_url_title, :category_ids => []
+            :meta_description, :source_url, :source_url_title,
+            :feature_image_id, :allow_comments,
+            marketplace_ids: [], :category_ids => [], :like_attributes => [
+              :header, :intro, :text, :_destroy, :id
+            ]
           ]
         end
 

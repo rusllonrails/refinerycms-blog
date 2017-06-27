@@ -58,6 +58,7 @@ module Refinery
 
       def comment
         @comment = @post.comments.create(comment_params)
+
         if @comment.valid?
           if Comment::Moderation.enabled? or @comment.ham?
             begin
@@ -104,7 +105,7 @@ module Refinery
     private
 
       def comment_params
-        params.require(:comment).permit(:name, :email, :message)
+        params.require(:comment).permit(:name, :email, :message, :humanizer_answer, :humanizer_question_id)
       end
 
     protected
@@ -155,11 +156,10 @@ module Refinery
 
       def find_all_blog_posts
         @posts = Refinery::Blog::Post.live
-                                     .includes(:comments, :categories)
+                                     .includes(:categories)
                                      .with_marketplace(current_marketplace_or_default.id)
                                      .where("published_at IS NOT NULL")
                                      .order(published_at: :desc)
-                                     .with_globalize
                                      .page(params[:page])
       end
 

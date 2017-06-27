@@ -3,6 +3,8 @@ module Refinery
     module Admin
       class CommentsController < ::Refinery::AdminController
 
+        include ::SubdomainHelper
+
         crudify :'refinery/blog/comment',
                 :title_attribute => :name,
                 :order => 'published_at DESC'

@@ -13,7 +13,7 @@ module Refinery
       validates :title, :presence => true, :uniqueness => true
 
       def self.by_title(title)
-        joins(:translations).find_by(title: title)
+        find_by(title: title)
       end
 
       def self.translated
@@ -21,7 +21,7 @@ module Refinery
       end
 
       def post_count
-        posts.live.with_globalize.count
+        posts.live.count
       end
 
       def highlighted_post

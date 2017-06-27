@@ -32,7 +32,22 @@ module Refinery
       attr_accessible :feature_image_id,
                       :like_attributes,
                       :allow_comments,
-                      :marketplace_ids
+                      :marketplace_ids,
+                      :author
+
+      attr_accessible :title,
+                      :body,
+                      :custom_teaser,
+                      :tag_list,
+                      :draft,
+                      :published_at,
+                      :custom_url,
+                      :user_id,
+                      :browser_title,
+                      :meta_description,
+                      :source_url,
+                      :source_url_title,
+                      :category_ids
 
       belongs_to :feature_image, class_name: 'Refinery::Image'
       has_one :like, as: :likeable, class_name: 'Refinery::Likes::Like'
@@ -90,8 +105,7 @@ module Refinery
         if category = self.categories.first
           posts = category.posts
                           .live
-                          .includes(:comments, :categories)
-                          .with_globalize
+                          .includes(:categories)
                           .limit(3)
         end
 
@@ -131,11 +145,11 @@ module Refinery
         end
 
         def by_year(date)
-          newest_first.where(:published_at => date.beginning_of_year..date.end_of_year).with_globalize
+          newest_first.where(:published_at => date.beginning_of_year..date.end_of_year)
         end
 
         def by_title(title)
-          joins(:translations).find_by(:title => title)
+          find_by(:title => title)
         end
 
         def newest_first
@@ -151,7 +165,7 @@ module Refinery
         end
 
         def popular(count)
-          order("access_count DESC").limit(count).with_globalize
+          order("access_count DESC").limit(count)
         end
 
         def previous(item)
@@ -167,13 +181,12 @@ module Refinery
         def next(current_record)
           where(arel_table[:published_at].gt(current_record.published_at))
             .where(:draft => false)
-            .order('published_at ASC').with_globalize.first
+            .order('published_at ASC').first
         end
 
         def published_before(date=Time.now)
           where(arel_table[:published_at].lt(date))
             .where(:draft => false)
-            .with_globalize
         end
         alias_method :live, :published_before
 

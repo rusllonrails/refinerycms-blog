@@ -13,6 +13,8 @@ module Refinery
       validates :name, :message, presence: true
       validates :email, format: { with: /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i }
 
+      attr_accessible :name, :email, :message
+
       attr_accessor :bypass_humanizer
 
       include Humanizer

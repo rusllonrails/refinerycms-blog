@@ -12,7 +12,7 @@ module Refinery
       before_action :add_breadcrumbs, :only => [:show]
 
       def show
-        @posts = @category.posts.live.includes(:comments, :categories).with_marketplace(current_marketplace_or_default.id).with_globalize.page(params[:page])
+        @posts = @category.posts.live.includes(:categories).with_marketplace(current_marketplace_or_default.id).page(params[:page])
 
         respond_with (@posts) do |format|
           format.rss { render :layout => false, :template => 'refinery/blog/posts/index' }
