@@ -59,7 +59,7 @@ $(document).ready(function(){
     var teaserEditor = tinymce.get('post_custom_teaser');
 
     if (teaserEditor) {
-      teaserEditor.html($('#post_body').val());
+      teaserEditor.setContent(tinymce.get('post_body').getContent());
     }
 
     event.preventDefault();
