@@ -106,6 +106,7 @@ module Refinery
           posts = category.posts
                           .live
                           .includes(:categories)
+                          .newest_first
                           .limit(3)
         end
 
@@ -139,7 +140,7 @@ module Refinery
           where(conditions).joins(:translations).where(globalized_conditions)
                            .readonly(false)
         end
-z
+
         def by_month(date)
           newest_first.where(:published_at => date.beginning_of_month..date.end_of_month)
         end
