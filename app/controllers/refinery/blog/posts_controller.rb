@@ -159,7 +159,7 @@ module Refinery
                                      .includes(:categories)
                                      .with_marketplace(current_marketplace_or_default.id)
                                      .where("published_at IS NOT NULL")
-                                     .order(published_at: :desc)
+                                     .newest_first
                                      .page(params[:page])
       end
 
