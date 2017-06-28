@@ -165,7 +165,7 @@ module Refinery
 
       def find_blog_post
         unless (@post = Refinery::Blog::Post.with_globalize.find_by_slug(params[:id])).try(:live?)
-          if refinery_user? and current_refinery_user.authorized_plugins.include?("refinerycms_blog")
+          if current_refinery_user.present? && current_refinery_user.authorized_plugins.include?("refinerycms_blog")
             @post = Refinery::Blog::Post.with_globalize.find_by_slug(params[:id])
           else
             error_404
